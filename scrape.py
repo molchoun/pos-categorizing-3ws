@@ -3,10 +3,10 @@ from bs4 import BeautifulSoup
 
 
 def fetch_article_text(url):
-    # headers = {
-    #         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299'
-    #     }
-    response = requests.get(url)
+    headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299'
+        }
+    response = requests.get(url, headers=headers)
     code = response.status_code
     if code == 200:
         soup = BeautifulSoup(response.content, 'html.parser')
