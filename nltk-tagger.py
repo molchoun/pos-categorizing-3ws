@@ -1,39 +1,41 @@
-import pandas as pd
-
-from scrape import fetch_article_text
-from nltk import pos_tag
-from nltk.tokenize import word_tokenize
-import nltk
-nltk.download('averaged_perceptron_tagger')
+import spacy
+nlp = spacy.load('en_core_web_sm')
 
 
-def get_pos(word_tags):
-    pos = {}
-    for word, tag in word_tags:
-        if tag in ['NN', 'NNS', 'NNP', 'JJ']:
-            if tag not in pos:
-                pos[tag] = [word]
-            else:
-                pos[tag].append(word)
-
-    df = {'Tags': [], 'Words': [], 'Count': []}
-
-    for k in pos:
-        df['Tags'].append(k)
-        df['Words'].append(" ".join(pos[k]))
-        df['Count'].append(len(pos[k]))
-
-    return pd.DataFrame(df)
+def get_subj(doc):
+    who = []
+    for token in doc:
+        if ("subj" in token.dep_):
+            who.append(str(doc[token.left_edge.i:token.right_edge.i+1]))
+    return who
 
 
-def main():
-    url = "https://www.hindustantimes.com/world-news/air-raid-alerts-issued-throughout-ukraine-explosions-reported-101682646645985-amp.html"
-    text = fetch_article_text(url)
-    tokenized_text = word_tokenize(text)
-    tagged_text = pos_tag(tokenized_text)
-    df = get_pos(tagged_text)
-    print(df)
+def get_vb(doc):
+    what = []
+    for token in doc:
+        if token.pos_ == "VERB" and token.dep_ == 'ROOT':
+            start = list(token.children)[1].i
+            end = list(token.children)[-1].i
+            what.append(str(doc[start:end]))
+    return what
+
+
+def get_advcl(doc):
+    how = []
+    for token in doc:
+        if ("advcl" in token.dep_):
+            how.append(str(doc[token.left_edge.i:token.right_edge.i+1]))
+    return how
+
+
+def main(doc):
+    who = get_subj(doc)
+    what = get_vb(doc)
+    how = get_advcl(doc)
+    print(f"Who: {who}\nWhat: {what}\nHow: {how}")
 
 
 if __name__ == "__main__":
-    main()
+    text = "Ten police personnel and a civilian driver were killed after Naxals blew up a vehicle that was part of a convoy carrying security personnel in Chhattisgarh's Dantewada district on Wednesday. CM Bhupesh Baghel will today attend the wreath-laying ceremony of the personnel."
+    doc = nlp(text)
+    main(doc)
